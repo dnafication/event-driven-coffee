@@ -1,6 +1,11 @@
 import { createYoga, Plugin, createSchema } from 'graphql-yoga'
 import { GraphQLError } from 'graphql'
-import { setTimeout } from 'timers/promises'
+import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
+import { addResolversToSchema } from '@graphql-tools/schema'
+import { loadSchema } from '@graphql-tools/load'
+import { join } from 'path'
+
+import resolvers from './resolvers'
 
 // available when handling requests, needs to be provided by the implementor
 type ServerContext = {}
@@ -10,46 +15,22 @@ interface UserContext {
   disableSubscription: boolean
 }
 
-export const yoga = createYoga<ServerContext, UserContext>({
-  context: {
-    disableSubscription: true
-  },
-  schema: createSchema({
-    typeDefs: /* GraphQL */ `
-      type Query {
-        greetings: String!
-      }
-      type Subscription {
-        greetings: String!
-      }
-    `,
-    resolvers: {
-      Query: {
-        greetings: () =>
-          'This is the `greetings` field of the root `Query` type'
-      },
-      Subscription: {
-        greetings: {
-          async *subscribe() {
-            const greetings = [
-              'Hello',
-              'Bonjour',
-              'Hola',
-              'Hallo',
-              'Ciao',
-              'Hej'
-            ]
-            for (const greeting of greetings) {
-              await setTimeout(1000)
-              yield { greetings: greeting }
-            }
-          }
-        }
-      }
-    }
-  }),
-  plugins: []
-})
+export const getYoga = async () => {
+  const schema = await loadSchema(join(__dirname, './schema.gql'), {
+    loaders: [new GraphQLFileLoader()]
+  })
+
+  return createYoga<ServerContext, UserContext>({
+    context: {
+      disableSubscription: false
+    },
+    schema: addResolversToSchema({
+      schema,
+      resolvers
+    }),
+    plugins: [useDisableSubscription()]
+  })
+}
 
 // context only relevant to the plugin
 type DisableSubscriptionPluginContext = {}

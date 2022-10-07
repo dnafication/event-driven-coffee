@@ -1,7 +1,13 @@
 import { createServer } from 'http'
-import { yoga } from './yoga'
+import { getYoga } from './yoga'
 
-const server = createServer(yoga)
-server.listen(4000, () => {
-  console.log(`Listening on http://localhost:4000/graphql`)
-})
+const main = async () => {
+  const yoga = await getYoga()
+  const server = createServer(yoga)
+  const PORT = 4000
+  server.listen(PORT, () => {
+    console.log(`Listening on http://localhost:${PORT}/graphql`)
+  })
+}
+
+main()

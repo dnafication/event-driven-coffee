@@ -8,9 +8,10 @@ Full stack coffee ordering app with Svelte for frontend and event driven archite
 
 ### Components
 
-- Frontend: Svelte
-- Backend:
-  - GraphQL API (Apollo Server running in ECS Fargate)
-  - Order management service (AWS Lambda)
-  - Payment service (AWS Lambda)
-  - Fulfilment service (AWS Lambda)
+- **Frontend**: Svelte
+- **Backend**:
+  - GraphQL API (GraphQL Yoga Server + Prisma on ECS)
+  - Event Bus (AWS EventBridge)
+  - Order management microservice (AWS Lambda)
+  - Payment microservice (AWS Lambda)
+  - Fulfilment microservice (AWS Lambda)
