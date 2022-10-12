@@ -1,4 +1,4 @@
-import { setTimeout } from 'timers/promises'
+import { setTimeout } from "timers/promises";
 
 const resolvers = {
   Query: {
@@ -14,7 +14,7 @@ const resolvers = {
     //     }
     //   }
     // }
-  }
-}
+  },
+};
 
-export default resolvers
+export default resolvers;

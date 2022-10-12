@@ -10,12 +10,14 @@
     "dev": "lerna run dev",
     "clean": "lerna run clean",
     "lint": "lerna run lint",
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "prettier": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\""
   },
   "devDependencies": {
     "esbuild": "0.15.10",
     "lerna": "^5.5.4",
     "nx": "14.8.3",
+    "prettier": "2.7.1",
     "serverless": "3.23.0",
     "serverless-esbuild": "1.33.0"
   }
