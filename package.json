@@ -13,7 +13,10 @@
     "test": "lerna run test"
   },
   "devDependencies": {
+    "esbuild": "0.15.10",
     "lerna": "^5.5.4",
-    "nx": "14.8.3"
+    "nx": "14.8.3",
+    "serverless": "3.23.0",
+    "serverless-esbuild": "1.33.0"
   }
 }
