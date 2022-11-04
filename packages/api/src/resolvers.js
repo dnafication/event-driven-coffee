@@ -5,7 +5,7 @@ export default {
     }
   },
   Mutation: {
-    orderCoffee: (parent, args, context, info) => {
+    createOrder: (parent, args, context, info) => {
       return {
         id: '1',
         coffee: {
