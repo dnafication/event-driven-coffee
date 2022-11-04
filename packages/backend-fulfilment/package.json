@@ -9,5 +9,6 @@
   },
   "keywords": [],
   "author": "Dina Basumatary",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {}
 }

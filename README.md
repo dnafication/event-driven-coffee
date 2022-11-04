@@ -27,5 +27,38 @@ provider:
   runtime: nodejs16.x
   stage: dev
   region: ap-southeast-2
-  profile: dina # replace dina with your profile name or delete this if default profile is used
+  profile: np-nonprod-1 # replace dina with your profile name or delete this if default profile is used
+```
+
+## Events
+
+Event object will have following interface:
+
+```ts
+interface Event {
+  id: string // event id
+  type: Type // event type
+  created: number // timestamp
+  data: {
+    orderId: string // order id
+    orderStatus: string // order status
+    paymentId: string // payment id
+    paymentStatus: string // payment status
+    fulfilmentId: string // fulfilment id
+    fulfilmentStatus: string // fulfilment status
+  }
+}
+
+enum Type {
+  ORDER_CREATED = 'ORDER_CREATED',
+  ORDER_IN_PROGRESS = 'ORDER_IN_PROGRESS',
+  ORDER_COMPLETED = 'ORDER_COMPLETED',
+  ORDER_CANCELLED = 'ORDER_CANCELLED',
+  PAYMENT_CREATED = 'PAYMENT_CREATED',
+  PAYMENT_SUCCESSFUL = 'PAYMENT_SUCCESSFUL',
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  FULFILMENT_CREATED = 'FULFILMENT_CREATED',
+  FULFILMENT_COMPLETED = 'FULFILMENT_COMPLETED',
+  FULFILMENT_FAILED = 'FULFILMENT_FAILED'
+}
 ```

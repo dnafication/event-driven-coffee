@@ -1,0 +1,19 @@
+{
+  "name": "common",
+  "version": "0.0.0",
+  "description": "shared module",
+  "author": "Dina Basumatary <dina.basumatary@newsperform.com.au>",
+  "homepage": "https://github.com/dnafication/event-driven-coffee#readme",
+  "license": "ISC",
+  "main": "src/index.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dnafication/event-driven-coffee.git"
+  },
+  "scripts": {
+    "build": "tsc --noEmit"
+  },
+  "bugs": {
+    "url": "https://github.com/dnafication/event-driven-coffee/issues"
+  }
+}
