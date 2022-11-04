@@ -15,5 +15,11 @@
   },
   "bugs": {
     "url": "https://github.com/dnafication/event-driven-coffee/issues"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.202.0",
+    "@aws-sdk/client-sns": "3.202.0",
+    "@aws-sdk/lib-dynamodb": "3.202.0",
+    "nanoid": "^4.0.0"
   }
 }
