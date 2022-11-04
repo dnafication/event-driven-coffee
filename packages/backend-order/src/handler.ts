@@ -1,12 +1,15 @@
+import { APIGatewayEvent, Context } from 'aws-lambda'
 import {
-  PublishCommand,
-  PublishCommandInput,
-  SNSClient
-} from '@aws-sdk/client-sns'
-import { successResponse, errorResponse } from 'common'
+  successResponse,
+  errorResponse,
+  ddbPut,
+  snsPublish,
+  nanoid
+} from 'common'
 import { setTimeout } from 'node:timers/promises'
 
-const sns = new SNSClient({ region: 'ap-southeast-2' })
+const { ORDER_TABLE_NAME, ORDERS_SNS_TOPIC_ARN } = process.env
+console.log(process.env)
 
 export const processOrder = async (event, context) => {
   const { Records } = event
@@ -30,38 +33,60 @@ export const processOrder = async (event, context) => {
 }
 
 // test function
-export const placeOrder = async () => {
-  const params = (id): PublishCommandInput => ({
-    MessageGroupId: 'order-123', // order id
-    MessageDeduplicationId: 'order-' + id, // orderid + status
-    Message: JSON.stringify({
-      orderId: '123',
-      orderDate: new Date().toISOString(),
-      orderItems: [
-        {
-          productId: '123',
-          quantity: 1
-        }
-      ]
-    }),
-    TopicArn: process.env.ORDERS_SNS_TOPIC_ARN,
-    MessageAttributes: {
-      orderType: {
-        DataType: 'String',
-        StringValue: 'standard'
-      }
-    },
-    Subject: 'New Order'
-  })
+export const placeOrder = async (event: APIGatewayEvent, context: Context) => {
+  const { body } = event
+  const { awsRequestId } = context
+  const { coffee, price, customerName } = JSON.parse(body)
+  // generate order id
+  const orderId = nanoid()
+  const orderStatus = 'ORDER_CREATED'
 
   try {
-    for (let i = 0; i < 15; i += 1) {
-      const data = await sns.send(new PublishCommand(params(i)))
-    }
-    console.log('Success')
+    // save order to db
+    console.log('Saving order to db', ORDER_TABLE_NAME)
+    const ddbOrder = await ddbPut({
+      TableName: ORDER_TABLE_NAME,
+      Item: {
+        orderId,
+        orderStatus,
+        coffee,
+        price,
+        customerName
+      }
+    })
+    console.log('Order saved to db', ddbOrder)
+
+    // publish order created event
+    console.log('Publishing order created event', ORDERS_SNS_TOPIC_ARN)
+    const order = await snsPublish({
+      MessageGroupId: orderId,
+      MessageDeduplicationId: `${orderId}-${orderStatus}`,
+      MessageAttributes: {
+        service: {
+          DataType: 'String',
+          StringValue: 'order'
+        }
+      },
+      Message: JSON.stringify({
+        orderId,
+        orderStatus,
+        coffee,
+        price,
+        customerName
+      }),
+      TopicArn: ORDERS_SNS_TOPIC_ARN
+    })
+    console.log('placeOrder: Order created event published', order)
+    return successResponse({
+      orderId,
+      orderStatus,
+      coffee,
+      price,
+      customerName
+    })
   } catch (error) {
-    console.log('Error', error)
-    return error
+    console.log('placeOrder: Failed', error)
+    return errorResponse(error.message, awsRequestId)
   }
 }
 

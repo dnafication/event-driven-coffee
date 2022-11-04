@@ -11,6 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-sns": "^3.186.0",
-    "common": "*"
+    "common": "*",
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.108"
   }
 }
