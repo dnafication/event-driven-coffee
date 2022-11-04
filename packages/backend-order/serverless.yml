@@ -1,0 +1,119 @@
+service: backend-order
+
+frameworkVersion: '3'
+
+configValidationMode: error
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: ap-southeast-2
+  profile: np-nonprod-1 # replace this with appropriate profile
+  tags:
+    SERVICE: event-driven-coffee
+    STAGE: ${self:provider.stage}
+  deploymentMethod: direct
+  memorySize: 512
+  timeout: 30
+  logRetentionInDays: 7
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource: !Ref OrderTopic
+
+  environment:
+    ORDERS_SNS_TOPIC_ARN: !Ref OrderTopic
+
+functions:
+  processOrder:
+    handler: src/handler.processOrder
+    events:
+      - sqs:
+          arn: !GetAtt OrderProcessingQ.Arn
+
+  placeOrder:
+    handler: src/handler.placeOrder
+    events:
+      - http:
+          path: /order
+          method: post
+          cors: true
+
+  getCoffees:
+    handler: src/handler.getCoffees
+    events:
+      - http:
+          path: /coffees
+          method: get
+          cors: true
+
+resources:
+  Resources:
+    # The main topic where all the messages related to orders are published
+    OrderTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: OrderTopic.fifo
+        TopicName: OrderTopic.fifo
+        FifoTopic: true
+
+    # Queue that will receive message from the OrderTopic and will be used by the Order processor Lambda function
+    OrderProcessingQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: OrderProcessingQ.fifo
+        FifoQueue: true
+        VisibilityTimeout: 35
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt OrderProcessingDLQ.Arn
+          maxReceiveCount: 5
+
+    OrderProcessingDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: OrderProcessingDLQ.fifo
+        FifoQueue: true
+
+      # Allow SNS Topic to publish to SQS Queues
+    OrderProcessingQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref OrderProcessingQ
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: sns.amazonaws.com
+              Action: sqs:SendMessage
+              Resource: '*'
+              
+
+    # SNS Subscriptions
+    OrderProcessingSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: !GetAtt OrderProcessingQ.Arn
+        Protocol: sqs
+        TopicArn: !Ref OrderTopic
+        # RawMessageDelivery: true
+    
+  Outputs:
+    OrderTopic:
+      Value: !Ref OrderTopic
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false

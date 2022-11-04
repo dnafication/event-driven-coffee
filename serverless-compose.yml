@@ -1,0 +1,19 @@
+services: 
+  order: 
+    path: packages/backend-order
+    
+  payment:
+    path: packages/backend-payment
+    dependsOn: 
+      - order
+    params: 
+      OrderTopic: ${order.OrderTopic}
+  
+  fulfilment: 
+    path: packages/backend-fulfilment
+    dependsOn: 
+      - order
+    params: 
+      OrderTopic: ${order.OrderTopic}
+
+ 

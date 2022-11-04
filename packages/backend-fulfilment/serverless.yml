@@ -1,0 +1,80 @@
+service: backend-fulfilment
+
+frameworkVersion: '3'
+
+configValidationMode: error
+
+plugins:
+  - serverless-esbuild
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: ap-southeast-2
+  profile: np-nonprod-1 # replace this with appropriate profile
+  tags:
+    SERVICE: event-driven-coffee
+    STAGE: ${self:provider.stage}
+  deploymentMethod: direct
+  memorySize: 512
+  timeout: 30
+  logRetentionInDays: 7
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource: ${param:OrderTopic}
+
+  environment:
+    ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}
+
+resources:
+  Resources:
+    # Connected to Fulfilment processor lambda function
+    FulfilmentProcessingQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: FulfilmentProcessingQ.fifo
+        FifoQueue: true
+        VisibilityTimeout: 35
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt FulfilmentProcessingDLQ.Arn
+          maxReceiveCount: 5
+
+    FulfilmentProcessingDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: FulfilmentProcessingDLQ.fifo
+        FifoQueue: true
+
+    FulfilmentProcessingQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref FulfilmentProcessingQ
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: sns.amazonaws.com
+              Action: sqs:SendMessage
+              Resource: !GetAtt FulfilmentProcessingQ.Arn
+
+    FulfilmentProcessingQSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: !GetAtt FulfilmentProcessingQ.Arn
+        Protocol: sqs
+        TopicArn: ${param:OrderTopic}
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false

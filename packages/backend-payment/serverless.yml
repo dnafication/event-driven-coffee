@@ -1,0 +1,80 @@
+service: backend-payment
+
+frameworkVersion: '3'
+
+configValidationMode: error
+
+plugins:
+  - serverless-esbuild
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: ap-southeast-2
+  profile: np-nonprod-1 # replace this with appropriate profile
+  tags:
+    SERVICE: event-driven-coffee
+    STAGE: ${self:provider.stage}
+  deploymentMethod: direct
+  memorySize: 512
+  timeout: 30
+  logRetentionInDays: 7
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sns:Publish
+          Resource: ${param:OrderTopic}
+
+  environment:
+    ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}
+
+resources:
+  Resources:
+    # Connected to Payment processor lambda function
+    PaymentProcessingQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: PaymentProcessingQ.fifo
+        FifoQueue: true
+        VisibilityTimeout: 35
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt PaymentProcessingDLQ.Arn
+          maxReceiveCount: 5
+
+    PaymentProcessingDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: PaymentProcessingDLQ.fifo
+        FifoQueue: true
+
+    PaymentProcessingQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref PaymentProcessingQ
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: sns.amazonaws.com
+              Action: sqs:SendMessage
+              Resource: !GetAtt PaymentProcessingQ.Arn
+
+    PaymentProcessingQSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: !GetAtt PaymentProcessingQ.Arn
+        Protocol: sqs
+        TopicArn: ${param:OrderTopic}
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
