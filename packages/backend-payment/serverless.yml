@@ -6,6 +6,7 @@ configValidationMode: error
 
 plugins:
   - serverless-esbuild
+  - serverless-offline
 
 package:
   individually: true
@@ -33,6 +34,28 @@ provider:
 
   environment:
     ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}
+    PAYMENT_TABLE_NAME: !Ref PaymentTable
+
+functions:
+  authorizerFunction: 
+    handler: src/authorizer/index.handler
+
+  paymentApi: 
+    handler: src/api/index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+          authorizer: 
+            name: authorizerFunction
+            identitySource: method.request.header.x-secret-key
+
+  paymentEventProcessor:
+    handler: src/event-processor/index.handler
+    events:
+      - sqs:
+          arn: !GetAtt PaymentProcessingQ.Arn
+          batchSize: 5
 
 resources:
   Resources:
@@ -73,6 +96,31 @@ resources:
         Endpoint: !GetAtt PaymentProcessingQ.Arn
         Protocol: sqs
         TopicArn: ${param:OrderTopic}
+
+    PaymentTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: PaymentTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: orderDate
+            AttributeType: S
+          - AttributeName: createdTimestamp
+            AttributeType: 'N'
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: orderDateIndex
+            Projection:
+              ProjectionType: ALL
+            KeySchema:
+              - AttributeName: orderDate
+                KeyType: HASH
+              - AttributeName: createdTimestamp
+                KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
 
 custom:
   esbuild:

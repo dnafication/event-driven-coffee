@@ -45,27 +45,25 @@ provider:
     ORDER_TABLE_NAME: !Ref OrderTable
 
 functions:
-  processOrder:
-    handler: src/handler.processOrder
+  authorizerFunction: 
+    handler: src/authorizer/index.handler
+
+  orderApi: 
+    handler: src/api/index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: any
+          authorizer: 
+            name: authorizerFunction
+            identitySource: method.request.header.x-secret-key
+
+  orderEventProcessor:
+    handler: src/event-processor/index.handler
     events:
       - sqs:
           arn: !GetAtt OrderProcessingQ.Arn
-
-  placeOrder:
-    handler: src/handler.placeOrder
-    events:
-      - http:
-          path: /order
-          method: post
-          cors: true
-
-  getCoffees:
-    handler: src/handler.getCoffees
-    events:
-      - http:
-          path: /coffees
-          method: get
-          cors: true
+          batchSize: 5
 
 resources:
   Resources:

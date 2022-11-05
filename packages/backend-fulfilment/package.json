@@ -10,7 +10,14 @@
   "keywords": [],
   "author": "Dina Basumatary",
   "license": "ISC",
-  "dependencies": {}
+  "dependencies": {
+    "@vendia/serverless-express": "4.10.1",
+    "common": "*",
+    "compression": "1.7.4",
+    "cors": "2.8.5",
+    "express": "4.18.2",
+    "source-map-support": "0.5.21"
+  },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.108"
   }

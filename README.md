@@ -9,8 +9,10 @@ Full stack coffee ordering app with Svelte for frontend and event driven archite
 ### Components
 
 - **Frontend**: Svelte
-- **Backend**:
-  - GraphQL API (GraphQL Yoga Server + Prisma on ECS)
+- **Backend API**:
+  - GraphQL API (Apollo on ECS)
+
+- **Backend Internal Services**:
   - SNS - SQS Fanout Architecture to handle asynchronous events
   - Event Bus (AWS EventBridge)
   - Order management microservice (AWS Lambda)
@@ -27,8 +29,33 @@ provider:
   runtime: nodejs16.x
   stage: dev
   region: ap-southeast-2
-  profile: np-nonprod-1 # replace dina with your profile name or delete this if default profile is used
+  profile: dina # replace dina with your profile name or delete this if default profile is used
 ```
+
+## Microservices
+There are multiple disparate microservices that are deployed as AWS Lambda functions. These microservices expose sync HTTP endpoints that allow consumers to interact with them. They also listen to events published on an SNS topic and perform actions based on the event.
+
+### Order Management Microservice
+This microservice is responsible for managing orders. It exposes the following endpoints:
+
+- `GET /coffees` - Get all coffees
+- `POST /order` - Create a new order
+- `GET /order/:id` - Get an order by id
+- `GET /order?date={today by default}` - Get all orders
+- `GET /order?customerName={name}` - Get all orders
+
+### Payment Microservice
+This microservice is responsible for processing payments. It exposes the following endpoints:
+
+- `POST /payment` - Process a payment
+- `GET /payment/:id` - Get a payment by id
+- `GET /payment?date={today by default}` - Get all payments
+
+### Fulfilment Microservice
+This microservice is responsible for fulfilling orders. It exposes the following endpoints:
+
+- `GET /fulfilment/:id` - Get a fulfilment by id
+- `GET /fulfilment?date={today by default}` - Get all fulfilments
 
 ## Events
 

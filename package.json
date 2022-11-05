@@ -19,7 +19,7 @@
     "lerna": "^5.5.4",
     "nx": "14.8.3",
     "prettier": "2.7.1",
-    "serverless": "3.23.0",
+    "serverless": "3.24.1",
     "serverless-esbuild": "1.33.0",
     "serverless-offline": "11.2.3"
   }
