@@ -1,0 +1,38 @@
+service: backend-notifier
+
+frameworkVersion: '3'
+
+configValidationMode: error
+
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+
+package:
+  individually: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  stage: dev
+  region: ap-southeast-2
+  profile: np-nonprod-1 # replace this with appropriate profile
+  tags:
+    SERVICE: event-driven-coffee
+    STAGE: ${self:provider.stage}
+  deploymentMethod: direct
+  memorySize: 512
+  timeout: 30
+  logRetentionInDays: 3
+
+functions:
+  paymentEventProcessor:
+    handler: src/index.handler
+    events:
+      - sns:
+          arn: ${param:OrderTopic}
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false

@@ -16,4 +16,11 @@ services:
     params: 
       OrderTopic: ${order.OrderTopic}
 
+  notifier: 
+    path: packages/backend-notifier
+    dependsOn: 
+      - order
+    params: 
+      OrderTopic: ${order.OrderTopic}
+
  
