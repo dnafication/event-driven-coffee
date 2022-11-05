@@ -38,7 +38,7 @@ provider:
             - dynamodb:Query
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
-          Resource: !GetAtt OrderTable.Arn
+          Resource: !GetAtt PaymentTable.Arn
 
   environment:
     ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}
