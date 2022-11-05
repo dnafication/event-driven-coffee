@@ -23,7 +23,7 @@ provider:
   deploymentMethod: direct
   memorySize: 512
   timeout: 30
-  logRetentionInDays: 7
+  logRetentionInDays: 3
   iam:
     role:
       statements:
@@ -31,6 +31,14 @@ provider:
           Action:
             - sns:Publish
           Resource: ${param:OrderTopic}
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: !GetAtt FulfilmentTable.Arn
 
   environment:
     ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}

@@ -23,7 +23,7 @@ provider:
   deploymentMethod: direct
   memorySize: 512
   timeout: 30
-  logRetentionInDays: 7
+  logRetentionInDays: 3
   iam:
     role:
       statements:

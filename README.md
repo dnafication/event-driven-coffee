@@ -47,7 +47,7 @@ This microservice is responsible for managing orders. It exposes the following e
 ### Payment Microservice
 This microservice is responsible for processing payments. It exposes the following endpoints:
 
-- `POST /payment` - Process a payment
+- `POST /payment` - Create a payment for an order
 - `GET /payment/:id` - Get a payment by id
 - `GET /payment?date={today by default}` - Get all payments
 
@@ -56,6 +56,7 @@ This microservice is responsible for fulfilling orders. It exposes the following
 
 - `GET /fulfilment/:id` - Get a fulfilment by id
 - `GET /fulfilment?date={today by default}` - Get all fulfilments
+- `UPDATE /fulfilment/:id` - Update status of a fulfilment by id
 
 ## Events
 
@@ -77,15 +78,15 @@ interface Event {
 }
 
 enum Type {
-  ORDER_CREATED = 'ORDER_CREATED',
-  ORDER_IN_PROGRESS = 'ORDER_IN_PROGRESS',
-  ORDER_COMPLETED = 'ORDER_COMPLETED',
-  ORDER_CANCELLED = 'ORDER_CANCELLED',
-  PAYMENT_CREATED = 'PAYMENT_CREATED',
-  PAYMENT_SUCCESSFUL = 'PAYMENT_SUCCESSFUL',
-  PAYMENT_FAILED = 'PAYMENT_FAILED',
-  FULFILMENT_CREATED = 'FULFILMENT_CREATED',
-  FULFILMENT_COMPLETED = 'FULFILMENT_COMPLETED',
-  FULFILMENT_FAILED = 'FULFILMENT_FAILED'
+  ORDER_CREATED = 'ORDER_CREATED', // explicitly created by GQL API
+  ORDER_IN_PROGRESS = 'ORDER_IN_PROGRESS', // order ms emits this after PAYMENT_SUCCESSFUL event
+  ORDER_COMPLETED = 'ORDER_COMPLETED', // order ms emits this after FULFILMENT_SUCCESSFUL event
+  ORDER_CANCELLED = 'ORDER_CANCELLED', // order ms emits this after PAYMENT_FAILED|FULFILMENT_FAILED event or customer cancels order
+  PAYMENT_CREATED = 'PAYMENT_CREATED', // explicitly created by GQL API
+  PAYMENT_SUCCESSFUL = 'PAYMENT_SUCCESSFUL', // payment ms emits this after successful payment processing in stripe
+  PAYMENT_FAILED = 'PAYMENT_FAILED', // payment ms emits this after payment fails in stripe
+  FULFILMENT_CREATED = 'FULFILMENT_CREATED', // set after PAYMENT_SUCCESSFUL event
+  FULFILMENT_COMPLETED = 'FULFILMENT_COMPLETED', // fulfilment ms emits this after successful fulfilment
+  FULFILMENT_FAILED = 'FULFILMENT_FAILED' // fulfilment ms emits this after fulfilment fails
 }
 ```
