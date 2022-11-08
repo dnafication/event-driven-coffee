@@ -29,8 +29,48 @@ functions:
   paymentEventProcessor:
     handler: src/index.handler
     events:
-      - sns:
-          arn: ${param:OrderTopic}
+      - sqs:
+          arn: !GetAtt NotifierQ.Arn
+          batchSize: 5
+
+resources:
+  Resources:
+    NotifierQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: NotifierQ.fifo
+        FifoQueue: true
+        VisibilityTimeout: 35
+        RedrivePolicy:
+          deadLetterTargetArn: !GetAtt NotifierDLQ.Arn
+          maxReceiveCount: 5
+
+    NotifierDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: NotifierDLQ.fifo
+        FifoQueue: true
+
+    NotifierQPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues:
+          - !Ref NotifierQ
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: sns.amazonaws.com
+              Action: sqs:SendMessage
+              Resource: !GetAtt NotifierQ.Arn
+
+    NotifierQSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Endpoint: !GetAtt NotifierQ.Arn
+        Protocol: sqs
+        TopicArn: ${param:OrderTopic}
 
 custom:
   esbuild:

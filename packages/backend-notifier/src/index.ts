@@ -1,22 +1,18 @@
-import { SNSEvent } from 'aws-lambda'
+import { SQSEvent } from 'aws-lambda'
+import { logger } from 'common'
 
-export const handler = async (event: SNSEvent) => {
+export const handler = async (event: SQSEvent) => {
   const { Records } = event
+  const log = logger('notifier')
 
-  console.log('Number of messages received', Records.length)
+  log('Number of messages received', Records.length)
 
   for (let i = 0; i < Records.length; i++) {
     const record = Records[i]
-    const { Sns } = record
-    const { Message, MessageId, MessageAttributes } = Sns
-    const orderPayload = JSON.parse(Message)
-    console.log('Processing order', orderPayload)
-    console.log(
-      `Message ID: ${MessageId}, Message Attributes: ${JSON.stringify(
-        MessageAttributes
-      )}`
-    )
+    const { body, messageId, attributes, messageAttributes } = record
+    const message = JSON.parse(body)
+    log('Received event', attributes.MessageDeduplicationId)
 
-    // process order
+    // call graphql mutation to update order|payment|fulfilment status
   }
 }

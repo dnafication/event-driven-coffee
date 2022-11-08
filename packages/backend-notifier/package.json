@@ -10,7 +10,9 @@
   "keywords": [],
   "author": "Dina Basumatary",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "common": "*"
+  },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.108"
   }
