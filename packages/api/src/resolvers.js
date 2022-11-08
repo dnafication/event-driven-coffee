@@ -41,8 +41,31 @@ export default {
     }
   },
   Mutation: {
-    createOrder: (parent, args, { dataSources }, info) => {
-      return
+    createOrder: async (
+      parent,
+      { coffeeId, customerId, customerName },
+      { dataSources },
+      info
+    ) => {
+      const coffees = await dataSources.orderAPI.getCoffees()
+      const coffee = coffees.find((coffee) => coffee.id == coffeeId)
+      if (!coffee) {
+        throw new Error('Invalid coffee ID')
+      }
+      const order = await dataSources.orderAPI.createOrder({
+        coffee,
+        customerId,
+        customerName
+      })
+      return {
+        id: order.id,
+        customerId: order.customerId,
+        customerName: order.customerName,
+        coffee: order.coffee,
+        status: order.orderStatus,
+        note: order.orderNote,
+        createdAt: Math.round(order.createdAt / 1000)
+      }
     }
   },
   Subscription: {

@@ -9,7 +9,7 @@ export default `#graphql
   }
 
   type Mutation {
-    createOrder(coffeeId: ID!, customerName: String!): OrderDetail!
+    createOrder(coffeeId: ID!, customerId: String!, customerName: String!): OrderDetail!
     makePayment(orderId: ID!): PaymentDetail!
     cancelOrder(orderId: ID!): OrderDetail!
     rejectFulfilment(fulfilmentId: ID!): FulfilmentDetail!
