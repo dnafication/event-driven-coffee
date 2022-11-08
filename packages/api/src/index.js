@@ -4,7 +4,7 @@ import { ApolloServer } from '@apollo/server'
 import { startStandaloneServer } from '@apollo/server/standalone'
 import typeDefs from './typedefs.js'
 import resolvers from './resolvers.js'
-import { OrderAPI } from './datasources.js'
+import { OrderAPI, PaymentAPI, FulfilmentAPI } from './datasources.js'
 
 const server = new ApolloServer({
   typeDefs,
@@ -15,7 +15,9 @@ const { url } = await startStandaloneServer(server, {
   context: () => {
     return {
       dataSources: {
-        orderAPI: new OrderAPI()
+        orderAPI: new OrderAPI(),
+        paymentAPI: new PaymentAPI(),
+        fulfilmentAPI: new FulfilmentAPI()
       }
     }
   },

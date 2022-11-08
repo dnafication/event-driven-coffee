@@ -42,7 +42,8 @@ This microservice is responsible for managing orders. It exposes the following e
 - `POST /order` - Create a new order
 - `GET /order/:id` - Get an order by id
 - `GET /order?date={today by default}` - Get all orders
-- `GET /order?customerName={name}` - Get all orders
+- `GET /order?customerId={id}` - Get all orders
+- `PATCH /order/:id` - Update an order by id, eg: cancel order
 
 ### Payment Microservice
 This microservice is responsible for processing payments. It exposes the following endpoints:
@@ -56,37 +57,30 @@ This microservice is responsible for fulfilling orders. It exposes the following
 
 - `GET /fulfilment/:id` - Get a fulfilment by id
 - `GET /fulfilment?date={today by default}` - Get all fulfilments
-- `UPDATE /fulfilment/:id` - Update status of a fulfilment by id
+- `PATCH /fulfilment/:id` - Update status of a fulfilment by id
 
 ## Events
 
 Event object will have following interface:
 
 ```ts
-interface Event {
-  id: string // event id
-  type: Type // event type
-  created: number // timestamp
-  data: {
-    orderId: string // order id
-    orderStatus: string // order status
-    paymentId: string // payment id
-    paymentStatus: string // payment status
-    fulfilmentId: string // fulfilment id
-    fulfilmentStatus: string // fulfilment status
-  }
-}
+export type OrderStatus =
+  | 'ORDER_CREATED'
+  | 'ORDER_IN_PROGRESS'
+  | 'ORDER_CANCELLED'
+  | 'ORDER_COMPLETED'
 
-enum Type {
-  ORDER_CREATED = 'ORDER_CREATED', // explicitly created by GQL API
-  ORDER_IN_PROGRESS = 'ORDER_IN_PROGRESS', // order ms emits this after PAYMENT_SUCCESSFUL event
-  ORDER_COMPLETED = 'ORDER_COMPLETED', // order ms emits this after FULFILMENT_SUCCESSFUL event
-  ORDER_CANCELLED = 'ORDER_CANCELLED', // order ms emits this after PAYMENT_FAILED|FULFILMENT_FAILED event or customer cancels order
-  PAYMENT_CREATED = 'PAYMENT_CREATED', // explicitly created by GQL API
-  PAYMENT_SUCCESSFUL = 'PAYMENT_SUCCESSFUL', // payment ms emits this after successful payment processing in stripe
-  PAYMENT_FAILED = 'PAYMENT_FAILED', // payment ms emits this after payment fails in stripe
-  FULFILMENT_CREATED = 'FULFILMENT_CREATED', // set after PAYMENT_SUCCESSFUL event
-  FULFILMENT_COMPLETED = 'FULFILMENT_COMPLETED', // fulfilment ms emits this after successful fulfilment
-  FULFILMENT_FAILED = 'FULFILMENT_FAILED' // fulfilment ms emits this after fulfilment fails
-}
+export type PaymentStatus =
+  | 'PAYMENT_PENDING'
+  | 'PAYMENT_CREATED'
+  | 'PAYMENT_SUCCESSFUL'
+  | 'PAYMENT_FAILED'
+  | 'PAYMENT_REFUNDED'
+
+export type FulfilmentStatus =
+  | 'FULFILMENT_PENDING'
+  | 'FULFILMENT_CREATED'
+  | 'FULFILMENT_COMPLETED'
+  | 'FULFILMENT_REJECTED'
+
 ```

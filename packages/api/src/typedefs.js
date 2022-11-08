@@ -3,9 +3,9 @@ export default `#graphql
     getCoffees: [Coffee]
 
     # admin only
-    getOrderList: [OrderDetail]
-    getPaymentList: [PaymentDetail]
-    getFulfilmentList: [FulfilmentDetail]
+    getOrderList(date: String, customerId: String): [OrderDetail]
+    getPaymentList(date: String): [PaymentDetail]
+    getFulfilmentList(date: String): [FulfilmentDetail]
   }
 
   type Mutation {
@@ -45,7 +45,8 @@ export default `#graphql
     id: ID!
     orderId: ID!
     status: String!
-    stripeSessionLink: String
+    paymentIntentId: String
+    clientSecret: String
     note: String
     createdAt: Int! # timestamp in seconds
   }
