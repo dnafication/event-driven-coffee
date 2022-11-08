@@ -39,12 +39,15 @@ provider:
             - dynamodb:Query
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
-          Resource: !GetAtt PaymentTable.Arn
+          Resource: 
+            - !GetAtt PaymentTable.Arn
+            - !Sub ${PaymentTable.Arn}/index/*
 
   environment:
     ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}
     PAYMENT_TABLE_NAME: !Ref PaymentTable
     STRIPE_API_KEY: ${env:STRIPE_API_KEY}
+    STRIPE_ENDPOINT_SECRET: ${env:STRIPE_ENDPOINT_SECRET}
 
 functions:
   paymentApi:

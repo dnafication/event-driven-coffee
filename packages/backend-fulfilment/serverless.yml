@@ -38,7 +38,9 @@ provider:
             - dynamodb:Query
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
-          Resource: !GetAtt FulfilmentTable.Arn
+          Resource:
+            - !GetAtt FulfilmentTable.Arn
+            - !Sub ${FulfilmentTable.Arn}/index/*
 
   environment:
     ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}

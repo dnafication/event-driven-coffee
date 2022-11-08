@@ -1,11 +1,11 @@
 import cors from 'cors'
 import express, { Request, Response } from 'express'
 import compression from 'compression'
-import { snsPublish, nanoid } from 'common'
+import { snsPublish, logger } from 'common'
+import { Fulfilment } from '../Fulfilment'
 
 const { FULFILMENT_TABLE_NAME, ORDERS_SNS_TOPIC_ARN } = process.env
-console.log('FULFILMENT_TABLE_NAME', FULFILMENT_TABLE_NAME)
-console.log('ORDERS_SNS_TOPIC_ARN', ORDERS_SNS_TOPIC_ARN)
+const log = logger('fulfilment-api')
 
 // create express app
 const app = express()
@@ -15,8 +15,93 @@ router.use(cors())
 router.use(compression())
 router.use(express.json())
 
-router.post('/fulfilment', async (req: Request, res: Response) => {
-  const { coffee, customerId, customerName } = req.body
+router.get('/fulfilment/:id', async (req: Request, res: Response) => {
+  const { id } = req.params
+  const fulfilment = new Fulfilment(FULFILMENT_TABLE_NAME, id)
+  try {
+    await fulfilment.load()
+    return res.json(fulfilment)
+  } catch (error) {
+    log('getFulfilment: Failed', error)
+    return res.status(500).json({ msg: error.message })
+  }
+})
+
+// get fulfilment by date
+router.get('/fulfilment', async (req: Request, res: Response) => {
+  const { date } = req.query
+  try {
+    const data = await Fulfilment.query({
+      TableName: FULFILMENT_TABLE_NAME,
+      IndexName: 'orderDateIndex',
+      KeyConditionExpression: '#date = :date',
+      ExpressionAttributeNames: {
+        '#date': 'date'
+      },
+      ExpressionAttributeValues: {
+        ':date': date
+      }
+    })
+    return res.json(data)
+  } catch (error) {
+    log('getFulfilmentByDate: Failed', error)
+    return res.status(500).json({ msg: error.message })
+  }
+})
+
+// mark as fulfilled
+router.patch('/fulfilment/:id', async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { status, note } = req.body
+  const fulfilment = new Fulfilment(FULFILMENT_TABLE_NAME, id)
+  try {
+    await fulfilment.load()
+    fulfilment.fulfilmentStatus = status
+    fulfilment.fulfilmentNote = note
+    await fulfilment.save()
+    log('Fulfilment updated', fulfilment.fulfilmentId)
+    // publish fulfilment updated event
+    await snsPublish({
+      MessageGroupId: fulfilment.orderId,
+      MessageDeduplicationId: `${fulfilment.orderId}}-${fulfilment.fulfilmentStatus}`,
+      MessageAttributes: {},
+      Message: JSON.stringify(fulfilment),
+      TopicArn: ORDERS_SNS_TOPIC_ARN
+    })
+    log('Fulfilment updated event published', fulfilment)
+    return res.json(fulfilment)
+  } catch (error) {
+    log('Failed', error)
+    return res.status(500).json({ msg: error.message })
+  }
+})
+
+router.delete('/fulfilment/:id', async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { note } = req.body
+  const fulfilment = new Fulfilment(FULFILMENT_TABLE_NAME, id)
+  try {
+    await fulfilment.load()
+    fulfilment.fulfilmentStatus = 'FULFILMENT_REJECTED'
+    fulfilment.fulfilmentNote = note
+    await fulfilment.save()
+    log('deleteFulfilment: Fulfilment rejected', fulfilment.fulfilmentId)
+    await snsPublish({
+      MessageGroupId: fulfilment.orderId,
+      MessageDeduplicationId: `${fulfilment.orderId}-${fulfilment.fulfilmentStatus}`,
+      MessageAttributes: {},
+      Message: JSON.stringify(fulfilment),
+      TopicArn: ORDERS_SNS_TOPIC_ARN
+    })
+    log(
+      'deleteFulfilment: Fulfilment rejected event published',
+      fulfilment.fulfilmentId
+    )
+    return res.json(fulfilment)
+  } catch (error) {
+    log('deleteFulfilment: Failed', error)
+    return res.status(500).json({ msg: error.message })
+  }
 })
 
 app.use('/', router)

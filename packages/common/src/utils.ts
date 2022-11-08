@@ -74,3 +74,9 @@ export const snsPublish = async (
 }
 
 export const nanoid = customAlphabet('1234567890cfe', 10)
+
+export const logger =
+  (service: string) =>
+  (message: any, ...optionalParameters) => {
+    console.log(`[${service}]: ${message}`, ...optionalParameters)
+  }

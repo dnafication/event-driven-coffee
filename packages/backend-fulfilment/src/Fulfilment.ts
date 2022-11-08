@@ -1,16 +1,13 @@
-import { BaseModel, Coffee, FulfilmentStatus, OrderStatus } from 'common'
+import { BaseModel, FulfilmentStatus } from 'common'
 
 export class Fulfilment extends BaseModel {
-  orderStatus: OrderStatus
-  orderNote = ''
-  fulfilmentStatus: FulfilmentStatus = 'FULFILMENT_CREATED'
-  fulfilmentNote = ''
-  coffee: Coffee
-  customerId: string
-  customerName: string
+  createdTimestamp: number
 
   constructor(ddbTableName: string, id: string) {
     super(ddbTableName, id)
     this.source = 'fulfilment-service'
+    this.fulfilmentId = id
+    this.fulfilmentStatus = 'FULFILMENT_PENDING'
+    this.createdTimestamp = this.createdAt
   }
 }

@@ -1,7 +1,7 @@
 import cors from 'cors'
 import express, { Request, Response } from 'express'
 import compression from 'compression'
-import { snsPublish, nanoid } from 'common'
+import { snsPublish, nanoid, logger } from 'common'
 
 const { ORDER_TABLE_NAME, ORDERS_SNS_TOPIC_ARN } = process.env
 
@@ -15,6 +15,8 @@ const router = express.Router()
 router.use(cors())
 router.use(compression())
 router.use(express.json())
+
+const log = logger('order-api')
 
 router.get('/coffees', async (req: Request, res: Response) => {
   return res.json(coffees)
@@ -34,7 +36,7 @@ router.post('/order', async (req: Request, res: Response) => {
     await order.save()
 
     // publish order created event
-    console.log('Publishing order created event', ORDERS_SNS_TOPIC_ARN)
+    log('Publishing order created event', ORDERS_SNS_TOPIC_ARN)
     const publishResp = await snsPublish({
       MessageGroupId: orderId,
       MessageDeduplicationId: `${orderId}-${order.orderStatus}`,
@@ -49,10 +51,10 @@ router.post('/order', async (req: Request, res: Response) => {
       }),
       TopicArn: ORDERS_SNS_TOPIC_ARN
     })
-    console.log('placeOrder: Order created event published', order)
+    log('placeOrder: Order created event published', order)
     return res.json(order)
   } catch (error) {
-    console.log('placeOrder: Failed', error)
+    log('placeOrder: Failed', error)
     return res.status(500).json({ msg: error.message })
   }
 })
@@ -65,7 +67,7 @@ router.get('/order/:orderId', async (req: Request, res: Response) => {
     await order.load()
     return res.json(order)
   } catch (error) {
-    console.log('getOrder: Failed', error)
+    log('getOrder: Failed', error)
     return res.status(500).json(error)
   }
 })
@@ -94,9 +96,12 @@ router.get('/orders', async (req: Request, res: Response) => {
       const orders = await Order.query({
         TableName: ORDER_TABLE_NAME,
         IndexName: 'orderDateIndex',
-        KeyConditionExpression: 'orderDate = :orderDate',
+        KeyConditionExpression: '#date = :orderDate',
+        ExpressionAttributeNames: {
+          '#date': 'date'
+        },
         ExpressionAttributeValues: {
-          ':orderDate': date
+          ':date': date
         }
       })
       return res.json(orders)
@@ -105,7 +110,7 @@ router.get('/orders', async (req: Request, res: Response) => {
       error: 'customerId or date must be provided'
     })
   } catch (error) {
-    console.log('getOrders: Failed', error)
+    log('getOrders: Failed', error)
     return res.status(500).json(error)
   }
 })
