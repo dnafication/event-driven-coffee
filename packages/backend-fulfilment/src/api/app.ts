@@ -49,7 +49,7 @@ router.get('/fulfilment', async (req: Request, res: Response) => {
   }
 })
 
-// mark as fulfilled
+// mark fulfilment as complete or failed
 router.patch('/fulfilment/:id', async (req: Request, res: Response) => {
   const { id } = req.params
   const { status, note } = req.body
@@ -72,34 +72,6 @@ router.patch('/fulfilment/:id', async (req: Request, res: Response) => {
     return res.json(fulfilment)
   } catch (error) {
     log('Failed', error)
-    return res.status(500).json({ msg: error.message })
-  }
-})
-
-router.delete('/fulfilment/:id', async (req: Request, res: Response) => {
-  const { id } = req.params
-  const { note } = req.body
-  const fulfilment = new Fulfilment(FULFILMENT_TABLE_NAME, id)
-  try {
-    await fulfilment.load()
-    fulfilment.fulfilmentStatus = 'FULFILMENT_REJECTED'
-    fulfilment.fulfilmentNote = note
-    await fulfilment.save()
-    log('deleteFulfilment: Fulfilment rejected', fulfilment.fulfilmentId)
-    await snsPublish({
-      MessageGroupId: fulfilment.orderId,
-      MessageDeduplicationId: `${fulfilment.orderId}-${fulfilment.fulfilmentStatus}`,
-      MessageAttributes: {},
-      Message: JSON.stringify(fulfilment),
-      TopicArn: ORDERS_SNS_TOPIC_ARN
-    })
-    log(
-      'deleteFulfilment: Fulfilment rejected event published',
-      fulfilment.fulfilmentId
-    )
-    return res.json(fulfilment)
-  } catch (error) {
-    log('deleteFulfilment: Failed', error)
     return res.status(500).json({ msg: error.message })
   }
 })

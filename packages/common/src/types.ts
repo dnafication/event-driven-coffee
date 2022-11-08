@@ -16,6 +16,7 @@ export type PaymentStatus =
   | 'PAYMENT_CREATED'
   | 'PAYMENT_SUCCESSFUL'
   | 'PAYMENT_FAILED'
+  | 'PAYMENT_REFUNDED'
 
 export type FulfilmentStatus =
   | 'FULFILMENT_PENDING'

@@ -72,8 +72,25 @@ router.get('/order/:orderId', async (req: Request, res: Response) => {
   }
 })
 
+// update order
+router.patch('/order/:orderId', async (req: Request, res: Response) => {
+  const { orderId } = req.params
+  const { status, note } = req.body
+  try {
+    const order = new Order(ORDER_TABLE_NAME, orderId)
+    await order.load()
+    order.orderStatus = status
+    order.orderNote = note
+    await order.save()
+    return res.json(order)
+  } catch (error) {
+    log('updateOrder: Failed', error)
+    return res.status(500).json(error)
+  }
+})
+
 // get order by customerId or date
-router.get('/orders', async (req: Request, res: Response) => {
+router.get('/order', async (req: Request, res: Response) => {
   const { customerId, date } = req.query
   if (customerId && date) {
     return res.status(400).json({
@@ -92,23 +109,23 @@ router.get('/orders', async (req: Request, res: Response) => {
       })
       return res.json(orders)
     }
-    if (date) {
-      const orders = await Order.query({
-        TableName: ORDER_TABLE_NAME,
-        IndexName: 'orderDateIndex',
-        KeyConditionExpression: '#date = :orderDate',
-        ExpressionAttributeNames: {
-          '#date': 'date'
-        },
-        ExpressionAttributeValues: {
-          ':date': date
-        }
-      })
-      return res.json(orders)
+    let date
+    if (!date) {
+      const today = new Date().toISOString().split('T')[0]
+      date = today
     }
-    return res.status(400).json({
-      error: 'customerId or date must be provided'
+    const orders = await Order.query({
+      TableName: ORDER_TABLE_NAME,
+      IndexName: 'orderDateIndex',
+      KeyConditionExpression: '#date = :date',
+      ExpressionAttributeNames: {
+        '#date': 'date'
+      },
+      ExpressionAttributeValues: {
+        ':date': date
+      }
     })
+    return res.json(orders)
   } catch (error) {
     log('getOrders: Failed', error)
     return res.status(500).json(error)

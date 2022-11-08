@@ -26,7 +26,7 @@ provider:
   logRetentionInDays: 3
 
 functions:
-  paymentEventProcessor:
+  eventProcessor:
     handler: src/index.handler
     events:
       - sqs:

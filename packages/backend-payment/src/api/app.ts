@@ -82,7 +82,7 @@ router.get('/payment', async (req: Request, res: Response) => {
   }
 })
 
-router.post(
+app.post(
   '/webhook',
   express.raw({ type: 'application/json' }),
   async (request, response) => {
