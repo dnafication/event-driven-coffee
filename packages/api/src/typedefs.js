@@ -9,7 +9,7 @@ export default `#graphql
   }
 
   type Mutation {
-    createOrder(coffeeId: ID!, orderedBy: String!): OrderDetail!
+    createOrder(coffeeId: ID!, customerName: String!): OrderDetail!
     makePayment(orderId: ID!): PaymentDetail!
     cancelOrder(orderId: ID!): OrderDetail!
     rejectFulfilment(fulfilmentId: ID!): FulfilmentDetail!
@@ -33,11 +33,12 @@ export default `#graphql
 
   type OrderDetail {
     id: ID!
+    customerId: String!
     customerName: String!
     coffee: Coffee!
     status: String!
     note: String
-    createdTimestamp: Int! # in seconds
+    createdAt: Int! # timestamp in seconds
   }
 
   type PaymentDetail {
@@ -46,7 +47,7 @@ export default `#graphql
     status: String!
     stripeSessionLink: String
     note: String
-    createdTimestamp: Int! # in seconds
+    createdAt: Int! # timestamp in seconds
   }
 
   type FulfilmentDetail {
@@ -54,7 +55,7 @@ export default `#graphql
     orderId: ID!
     status: String!
     note: String
-    createdTimestamp: Int! # in seconds
+    createdAt: Int! # timestamp in seconds
   }
 
 `

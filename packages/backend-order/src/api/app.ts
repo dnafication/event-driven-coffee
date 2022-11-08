@@ -1,12 +1,12 @@
 import cors from 'cors'
 import express, { Request, Response } from 'express'
 import compression from 'compression'
-import { ddbPut, snsPublish, nanoid } from 'common'
+import { snsPublish, nanoid } from 'common'
 
 const { ORDER_TABLE_NAME, ORDERS_SNS_TOPIC_ARN } = process.env
-console.log(process.env)
 
 import coffees from './coffees'
+import { Order } from '../Order'
 
 // create express app
 const app = express()
@@ -20,56 +20,92 @@ router.get('/coffees', async (req: Request, res: Response) => {
   return res.json(coffees)
 })
 
+// create order
 router.post('/order', async (req: Request, res: Response) => {
-  const { coffee, price, customerName } = req.body
+  const { coffee, customerName, customerId } = req.body
   const orderId = nanoid()
-  const orderStatus = 'ORDER_CREATED'
 
   try {
     // save order to db
-    console.log('Saving order to db', ORDER_TABLE_NAME)
-    const ddbOrder = await ddbPut({
-      TableName: ORDER_TABLE_NAME,
-      Item: {
-        orderId,
-        orderStatus,
-        coffee,
-        price,
-        customerName
-      }
-    })
-    console.log('Order saved to db', ddbOrder)
+    const order = new Order(ORDER_TABLE_NAME, orderId)
+    order.coffee = coffee
+    order.customerId = customerId
+    order.customerName = customerName
+    await order.save()
 
     // publish order created event
     console.log('Publishing order created event', ORDERS_SNS_TOPIC_ARN)
-    const order = await snsPublish({
+    const publishResp = await snsPublish({
       MessageGroupId: orderId,
-      MessageDeduplicationId: `${orderId}-${orderStatus}`,
-      MessageAttributes: {
-        service: {
-          DataType: 'String',
-          StringValue: 'order'
-        }
-      },
+      MessageDeduplicationId: `${orderId}-${order.orderStatus}`,
+      MessageAttributes: {},
       Message: JSON.stringify({
         orderId,
-        orderStatus,
+        orderStatus: order.orderStatus,
+        source: order.source,
         coffee,
-        price,
+        customerId,
         customerName
       }),
       TopicArn: ORDERS_SNS_TOPIC_ARN
     })
     console.log('placeOrder: Order created event published', order)
-    return res.json({
-      orderId,
-      orderStatus,
-      coffee,
-      price,
-      customerName
-    })
+    return res.json(order)
   } catch (error) {
     console.log('placeOrder: Failed', error)
+    return res.status(500).json({ msg: error.message })
+  }
+})
+
+// get order
+router.get('/order/:orderId', async (req: Request, res: Response) => {
+  const { orderId } = req.params
+  try {
+    const order = new Order(ORDER_TABLE_NAME, orderId)
+    await order.load()
+    return res.json(order)
+  } catch (error) {
+    console.log('getOrder: Failed', error)
+    return res.status(500).json(error)
+  }
+})
+
+// get order by customerId or date
+router.get('/orders', async (req: Request, res: Response) => {
+  const { customerId, date } = req.query
+  if (customerId && date) {
+    return res.status(400).json({
+      error: 'customerId and date cannot be used together'
+    })
+  }
+  try {
+    if (customerId) {
+      const orders = await Order.query({
+        TableName: ORDER_TABLE_NAME,
+        IndexName: 'orderCustomerIndex',
+        KeyConditionExpression: 'customerId = :customerId',
+        ExpressionAttributeValues: {
+          ':customerId': customerId
+        }
+      })
+      return res.json(orders)
+    }
+    if (date) {
+      const orders = await Order.query({
+        TableName: ORDER_TABLE_NAME,
+        IndexName: 'orderDateIndex',
+        KeyConditionExpression: 'orderDate = :orderDate',
+        ExpressionAttributeValues: {
+          ':orderDate': date
+        }
+      })
+      return res.json(orders)
+    }
+    return res.status(400).json({
+      error: 'customerId or date must be provided'
+    })
+  } catch (error) {
+    console.log('getOrders: Failed', error)
     return res.status(500).json(error)
   }
 })

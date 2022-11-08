@@ -38,25 +38,22 @@ provider:
             - dynamodb:Query
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
-          Resource: !GetAtt OrderTable.Arn
+          Resource: 
+            - !GetAtt OrderTable.Arn
+            - !Sub '${OrderTable.Arn}/index/*'
+
 
   environment:
     ORDERS_SNS_TOPIC_ARN: !Ref OrderTopic
     ORDER_TABLE_NAME: !Ref OrderTable
 
 functions:
-  authorizerFunction: 
-    handler: src/authorizer/index.handler
-
-  orderApi: 
+  orderApi:
     handler: src/api/index.handler
     events:
       - http:
           path: /{proxy+}
           method: any
-          authorizer: 
-            name: authorizerFunction
-            identitySource: method.request.header.x-secret-key
 
   orderEventProcessor:
     handler: src/event-processor/index.handler
@@ -120,27 +117,36 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: OrderTable
+        BillingMode: PAY_PER_REQUEST
         AttributeDefinitions:
-          - AttributeName: orderId
+          - AttributeName: id
             AttributeType: S
-          - AttributeName: orderDate
+          - AttributeName: date
             AttributeType: S
-          - AttributeName: createdTimestamp
+          - AttributeName: createdAt
             AttributeType: 'N'
+          - AttributeName: customerId
+            AttributeType: S
         KeySchema:
-          - AttributeName: orderId
+          - AttributeName: id
             KeyType: HASH
         GlobalSecondaryIndexes:
           - IndexName: orderDateIndex
             Projection:
               ProjectionType: ALL
             KeySchema:
-              - AttributeName: orderDate
+              - AttributeName: date
                 KeyType: HASH
-              - AttributeName: createdTimestamp
+              - AttributeName: createdAt
                 KeyType: RANGE
-
-        BillingMode: PAY_PER_REQUEST
+          - IndexName: orderCustomerIndex
+            Projection:
+              ProjectionType: ALL
+            KeySchema:
+              - AttributeName: customerId
+                KeyType: HASH
+              - AttributeName: createdAt
+                KeyType: RANGE
 
   Outputs:
     OrderTopic:

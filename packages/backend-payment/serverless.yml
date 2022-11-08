@@ -3,6 +3,7 @@ service: backend-payment
 frameworkVersion: '3'
 
 configValidationMode: error
+useDotenv: true
 
 plugins:
   - serverless-esbuild
@@ -43,20 +44,15 @@ provider:
   environment:
     ORDERS_SNS_TOPIC_ARN: ${param:OrderTopic}
     PAYMENT_TABLE_NAME: !Ref PaymentTable
+    STRIPE_API_KEY: ${env:STRIPE_API_KEY}
 
 functions:
-  authorizerFunction: 
-    handler: src/authorizer/index.handler
-
-  paymentApi: 
+  paymentApi:
     handler: src/api/index.handler
     events:
       - http:
           path: /{proxy+}
           method: any
-          authorizer: 
-            name: authorizerFunction
-            identitySource: method.request.header.x-secret-key
 
   paymentEventProcessor:
     handler: src/event-processor/index.handler
@@ -112,7 +108,7 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
-          - AttributeName: orderDate
+          - AttributeName: date
             AttributeType: S
           - AttributeName: createdTimestamp
             AttributeType: 'N'
@@ -124,7 +120,7 @@ resources:
             Projection:
               ProjectionType: ALL
             KeySchema:
-              - AttributeName: orderDate
+              - AttributeName: date
                 KeyType: HASH
               - AttributeName: createdTimestamp
                 KeyType: RANGE

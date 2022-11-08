@@ -6,24 +6,19 @@ import {
   MessageAttributeValue
 } from '@aws-sdk/client-sns'
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
-import {
-  DynamoDBDocumentClient,
-  PutCommand,
-  PutCommandInput,
-  PutCommandOutput,
-  GetCommand,
-  GetCommandInput,
-  GetCommandOutput,
-  QueryCommand,
-  QueryCommandInput,
-  QueryCommandOutput
-} from '@aws-sdk/lib-dynamodb'
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import { customAlphabet } from 'nanoid'
 
 const REGION = 'ap-southeast-2'
 const snsClient = new SNSClient({ region: REGION })
 const ddbClient = new DynamoDBClient({ region: REGION })
-const ddbDocClient = DynamoDBDocumentClient.from(ddbClient)
+export const ddbDocClient = DynamoDBDocumentClient.from(ddbClient, {
+  marshallOptions: {
+    convertClassInstanceToMap: true,
+    removeUndefinedValues: true,
+    convertEmptyValues: true
+  }
+})
 
 export const errorResponse = (errorMessage, awsRequestId) => {
   return {
@@ -75,63 +70,6 @@ export const snsPublish = async (
   }
 
   const data = await snsClient.send(new PublishCommand(params))
-  return data
-}
-
-interface DDBPutInput {
-  TableName: string
-  Item: Record<string, any>
-}
-
-export const ddbPut = async (input: DDBPutInput): Promise<PutCommandOutput> => {
-  const { TableName, Item } = input
-  const params: PutCommandInput = {
-    TableName,
-    Item
-  }
-  const data = await ddbDocClient.send(new PutCommand(params))
-  return data
-}
-
-interface DDBGetInput {
-  TableName: string
-  Key: Record<string, any>
-}
-
-export const ddbGet = async (input: DDBGetInput): Promise<GetCommandOutput> => {
-  const { TableName, Key } = input
-  const params: GetCommandInput = {
-    TableName,
-    Key
-  }
-  const data = await ddbDocClient.send(new GetCommand(params))
-  return data
-}
-
-interface DDBQueryInput {
-  TableName: string
-  IndexName?: string
-  KeyConditionExpression: string
-  ExpressionAttributeValues: Record<string, any>
-  ExpressionAttributeNames?: Record<string, string>
-}
-
-export const ddbQuery = async (
-  input: DDBQueryInput
-): Promise<QueryCommandOutput> => {
-  const {
-    TableName,
-    IndexName,
-    KeyConditionExpression,
-    ExpressionAttributeValues
-  } = input
-  const params: QueryCommandInput = {
-    TableName,
-    IndexName,
-    KeyConditionExpression,
-    ExpressionAttributeValues
-  }
-  const data = await ddbDocClient.send(new QueryCommand(params))
   return data
 }
 

@@ -45,18 +45,12 @@ provider:
     FULFILMENT_TABLE_NAME: !Ref FulfilmentTable
 
 functions:
-  authorizerFunction: 
-    handler: src/authorizer/index.handler
-
-  fulfilmentApi: 
+  fulfilmentApi:
     handler: src/api/index.handler
     events:
       - http:
           path: /{proxy+}
           method: any
-          authorizer: 
-            name: authorizerFunction
-            identitySource: method.request.header.x-secret-key
 
   fulfilmentEventProcessor:
     handler: src/event-processor/index.handler
@@ -105,7 +99,7 @@ resources:
         Protocol: sqs
         TopicArn: ${param:OrderTopic}
 
-     # Fulfilment dynamodb table
+      # Fulfilment dynamodb table
     FulfilmentTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -113,7 +107,7 @@ resources:
         AttributeDefinitions:
           - AttributeName: id
             AttributeType: S
-          - AttributeName: orderDate
+          - AttributeName: date
             AttributeType: S
           - AttributeName: createdTimestamp
             AttributeType: 'N'
@@ -125,7 +119,7 @@ resources:
             Projection:
               ProjectionType: ALL
             KeySchema:
-              - AttributeName: orderDate
+              - AttributeName: date
                 KeyType: HASH
               - AttributeName: createdTimestamp
                 KeyType: RANGE
