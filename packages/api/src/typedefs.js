@@ -2,9 +2,19 @@ export default `#graphql
   type Query {
     getCoffees: [Coffee]
 
-    # admin only
+    """
+    admin only
+    """
     getOrderList(date: String, customerId: String): [OrderDetail]
+    
+    """
+    admin only
+    """
     getPaymentList(date: String): [PaymentDetail]
+    
+    """
+    admin only
+    """
     getFulfilmentList(date: String): [FulfilmentDetail]
   }
 
@@ -12,16 +22,29 @@ export default `#graphql
     createOrder(coffeeId: ID!, customerId: String!, customerName: String!): OrderDetail!
     makePayment(orderId: ID!): PaymentDetail!
     cancelOrder(orderId: ID!): OrderDetail!
-    rejectFulfilment(fulfilmentId: ID!): FulfilmentDetail!
-    publishOrderStatus(id: ID!, status: String!, note: String!): Boolean!
-    publishPaymentStatus(id: ID!, orderId: ID!, status: String!, note: String!): Boolean!
-    publishFulfilmentStatus(id: ID!, orderId: ID!, status: String!, note: String!): Boolean!
+
+    """
+    admin only
+    """
+    rejectFulfilment(fulfilmentId: ID!, note: String): FulfilmentDetail!
+
+    """
+    admin only
+    """
+    completeFulfilment(fulfilmentId: ID!, note: String): FulfilmentDetail!
+
+    """
+    used by the notifier lambda
+    """
+    publishOrderStatus(orderId: ID!): Boolean!
+    publishPaymentStatus(paymentId: ID!): Boolean!
+    publishFulfilmentStatus(fulfilmentId: ID!): Boolean!
   }
 
   type Subscription {
-    orderEvents: OrderDetail
-    paymentEvents: PaymentDetail
-    fulfilmentEvents: FulfilmentDetail
+    orderUpdated(orderId:String): OrderDetail
+    paymentUpdated: PaymentDetail
+    fulfilmentUpdated: FulfilmentDetail
   }
 
   type Coffee {
@@ -35,7 +58,7 @@ export default `#graphql
     id: ID!
     customerId: String!
     customerName: String!
-    coffee: Coffee!
+    coffee: Coffee
     status: String!
     note: String
     createdAt: Int! # timestamp in seconds

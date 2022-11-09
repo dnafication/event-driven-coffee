@@ -14,7 +14,13 @@ export class OrderAPI extends RESTDataSource {
 
   async getOrderById(orderId) {
     console.log(`getOrderById: ${orderId}`)
-    return this.get(`order/${orderId}`)
+    try {
+      const data = await this.get(`order/${orderId}`)
+      return data
+    } catch (err) {
+      console.log(err)
+      return null
+    }
   }
 
   async getOrdersForUser(customerId) {
@@ -59,9 +65,18 @@ export class PaymentAPI extends RESTDataSource {
     return this.get(`payment/${id}`)
   }
 
-  async makePayment(input) {
-    console.log(`makePayment: ${JSON.stringify(input)}`)
-    return this.post('payment', { body: input })
+  async makePayment(orderId) {
+    console.log(`makePayment: orderId: ${JSON.stringify(orderId)}`)
+    const order = new OrderAPI()
+    const orderDetails = await order.getOrderById(orderId)
+    return this.post('payment', {
+      body: {
+        orderId: orderDetails.id,
+        customerId: orderDetails.customerId,
+        customerName: orderDetails.customerName,
+        coffee: orderDetails.coffee
+      }
+    })
   }
 }
 
@@ -82,9 +97,9 @@ export class FulfilmentAPI extends RESTDataSource {
     return this.get(`fulfilment/${id}`)
   }
 
-  async completeFulfilment(note) {
+  async completeFulfilment(fulfilmentId, note) {
     console.log(`completeFulfilment: ${note}`)
-    return this.patch('fulfilment', {
+    return this.patch(`fulfilment/${fulfilmentId}`, {
       body: {
         status: 'FULFILMENT_COMPLETED',
         note: note ?? 'Note not provided'
@@ -92,9 +107,9 @@ export class FulfilmentAPI extends RESTDataSource {
     })
   }
 
-  async rejectFulfilment(note) {
+  async rejectFulfilment(fulfilmentId, note) {
     console.log(`rejectFulfilment: ${note}`)
-    return this.patch('fulfilment', {
+    return this.patch(`fulfilment/${fulfilmentId}`, {
       body: {
         status: 'FULFILMENT_REJECTED',
         note: note ?? 'Note not provided'
