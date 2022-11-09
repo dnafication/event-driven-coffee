@@ -67,12 +67,15 @@ export class BaseModel {
     const ddbGet = await ddbDocClient.send(new GetCommand(input))
     if (ddbGet.Item) {
       Object.assign(this, ddbGet.Item)
+    } else {
+      throw new Error(`Item not found: ${this.id}, ${this.ddbTableName}`)
     }
     this.log(`Item loaded from db: ${this.id}, ${this.ddbTableName}`)
   }
 
   static async query(input: QueryCommandInput) {
     // query db
+    console.log(`Querying db: ${input}`)
     const ddbQuery = await ddbDocClient.send(new QueryCommand(input))
     return ddbQuery.Items
   }

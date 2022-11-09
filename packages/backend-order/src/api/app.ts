@@ -91,7 +91,8 @@ router.patch('/order/:orderId', async (req: Request, res: Response) => {
 
 // get order by customerId or date
 router.get('/order', async (req: Request, res: Response) => {
-  const { customerId, date } = req.query
+  const { customerId } = req.query
+  let { date } = req.query
   if (customerId && date) {
     return res.status(400).json({
       error: 'customerId and date cannot be used together'
@@ -109,7 +110,6 @@ router.get('/order', async (req: Request, res: Response) => {
       })
       return res.json(orders)
     }
-    let date
     if (!date) {
       const today = new Date().toISOString().split('T')[0]
       date = today
