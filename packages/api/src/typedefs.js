@@ -42,9 +42,9 @@ export default `#graphql
   }
 
   type Subscription {
-    orderUpdated(orderId:String): OrderDetail
-    paymentUpdated: PaymentDetail
-    fulfilmentUpdated: FulfilmentDetail
+    orderUpdated(orderId:String, customerId: String): OrderDetail
+    paymentUpdated(paymentId: String, customerId: String): PaymentDetail
+    fulfilmentUpdated(fulfilmentId: String, customerId: String): FulfilmentDetail
   }
 
   type Coffee {

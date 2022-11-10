@@ -184,8 +184,8 @@ export default {
           if (variables.orderId) {
             return payload.orderUpdated.id == variables.orderId
           }
-          if (variables.userId) {
-            return payload.orderUpdated.customerId == variables.userId
+          if (variables.customerId) {
+            return payload.orderUpdated.customerId == variables.customerId
           }
           return true
         }
@@ -199,8 +199,8 @@ export default {
           if (variables.paymentId) {
             return payload.paymentUpdated.id == variables.paymentId
           }
-          if (variables.userId) {
-            return payload.paymentUpdated.customerId == variables.userId
+          if (variables.customerId) {
+            return payload.paymentUpdated.customerId == variables.customerId
           }
           return true
         }
@@ -213,8 +213,8 @@ export default {
           if (variables.fulfilmentId) {
             return payload.fulfilmentUpdated.id == variables.fulfilmentId
           }
-          if (variables.userId) {
-            return payload.fulfilmentUpdated.customerId == variables.userId
+          if (variables.customerId) {
+            return payload.fulfilmentUpdated.customerId == variables.customerId
           }
           return true
         }
