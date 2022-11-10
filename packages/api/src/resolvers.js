@@ -7,8 +7,13 @@ export default {
     getCoffees: (_, __, { dataSources }) => {
       return dataSources.orderAPI.getCoffees()
     },
-    getOrderList: async (_, { date }, { dataSources }) => {
-      const orderList = await dataSources.orderAPI.getOrders(date)
+    getOrderList: async (_, { date, customerId }, { dataSources }) => {
+      let orderList
+      if (customerId) {
+        orderList = await dataSources.orderAPI.getOrdersForUser(customerId)
+      } else {
+        orderList = await dataSources.orderAPI.getOrders(date)
+      }
       return orderList.map((order) => ({
         id: order.id,
         customerId: order.customerId,
