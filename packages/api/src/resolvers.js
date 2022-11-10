@@ -181,9 +181,13 @@ export default {
       subscribe: withFilter(
         () => pubsub.asyncIterator(['ORDER_STATUS']),
         (payload, variables) => {
-          variables.orderId
-            ? payload.orderUpdated.id == variables.orderId
-            : true
+          if (variables.orderId) {
+            return payload.orderUpdated.id == variables.orderId
+          }
+          if (variables.userId) {
+            return payload.orderUpdated.customerId == variables.userId
+          }
+          return true
         }
       )
     },
@@ -192,9 +196,13 @@ export default {
       subscribe: withFilter(
         () => pubsub.asyncIterator(['PAYMENT_STATUS']),
         (payload, variables) => {
-          variables.paymentId
-            ? payload.paymentUpdated.id == variables.paymentId
-            : true
+          if (variables.paymentId) {
+            return payload.paymentUpdated.id == variables.paymentId
+          }
+          if (variables.userId) {
+            return payload.paymentUpdated.customerId == variables.userId
+          }
+          return true
         }
       )
     },
@@ -202,9 +210,13 @@ export default {
       subscribe: withFilter(
         () => pubsub.asyncIterator(['FULFILMENT_STATUS']),
         (payload, variables) => {
-          variables.fulfilmentId
-            ? payload.fulfilmentUpdated.id == variables.fulfilmentId
-            : true
+          if (variables.fulfilmentId) {
+            return payload.fulfilmentUpdated.id == variables.fulfilmentId
+          }
+          if (variables.userId) {
+            return payload.fulfilmentUpdated.customerId == variables.userId
+          }
+          return true
         }
       )
     }
