@@ -54,7 +54,7 @@
 	};
 
 	const client = createClient({
-		url: `http://localhost:4000/`
+		url: import.meta.env.VITE_API_URL
 	});
 
 	setContextClient(client);
