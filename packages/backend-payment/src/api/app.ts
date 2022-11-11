@@ -82,6 +82,18 @@ router.get('/payment', async (req: Request, res: Response) => {
   }
 })
 
+router.get('/payment/:paymentId', async (req: Request, res: Response) => {
+  const { paymentId } = req.params
+  try {
+    const payment = new Payment(PAYMENT_TABLE_NAME, paymentId)
+    await payment.load()
+    return res.json(payment)
+  } catch (error) {
+    log('getPayment: Failed', error)
+    return res.status(500).json({ msg: error.message })
+  }
+})
+
 app.post(
   '/webhook',
   express.raw({ type: 'application/json' }),

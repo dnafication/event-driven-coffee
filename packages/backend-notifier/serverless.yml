@@ -3,6 +3,7 @@ service: backend-notifier
 frameworkVersion: '3'
 
 configValidationMode: error
+useDotenv: true
 
 plugins:
   - serverless-esbuild
@@ -24,6 +25,8 @@ provider:
   memorySize: 512
   timeout: 30
   logRetentionInDays: 3
+  environment:
+    GRAPHQL_API_URL: ${env:GRAPHQL_API_URL}
 
 functions:
   eventProcessor:

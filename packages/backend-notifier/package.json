@@ -11,7 +11,9 @@
   "author": "Dina Basumatary",
   "license": "ISC",
   "dependencies": {
-    "common": "*"
+    "@urql/core": "3.0.5",
+    "common": "*",
+    "graphql": "16.6.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.108"

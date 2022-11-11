@@ -131,6 +131,7 @@ export default {
       if (!order) {
         throw new Error('Invalid order ID')
       }
+      console.log('publishing order status', order.orderStatus)
       pubsub.publish('ORDER_STATUS', {
         orderUpdated: {
           ...order,
@@ -147,6 +148,7 @@ export default {
       if (!payment) {
         throw new Error('Invalid payment ID')
       }
+      console.log('publishing payment status', payment.paymentStatus)
       pubsub.publish('PAYMENT_STATUS', {
         paymentUpdated: {
           ...payment,
@@ -165,6 +167,7 @@ export default {
       if (!fulfilment) {
         throw new Error('Invalid fulfilment ID')
       }
+      console.log('publishing fulfilment status', fulfilment.fulfilmentStatus)
       pubsub.publish('FULFILMENT_STATUS', {
         fulfilmentUpdated: {
           ...fulfilment,
