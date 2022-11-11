@@ -53,14 +53,19 @@
 		showModal = false;
 	};
 
+
+
 	const client = createClient({
-		url: import.meta.env.VITE_API_URL
+		url: import.meta.env.VITE_API_URL,
 	});
 
 	setContextClient(client);
 </script>
 
-<main class="container mx-auto max-w-lg p-2 bg-slate-200 prose">
+<main class="container mx-auto max-w-lg p-2 prose">
+  <header class="text-2xl font-bold">
+    Event Driven Coffee
+  </header>
 	<slot />
 </main>
 

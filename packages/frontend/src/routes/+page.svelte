@@ -3,18 +3,17 @@
 	import { Elements, PaymentElement } from 'svelte-stripe';
 
 	import { onMount } from 'svelte';
-  import { goto} from '$app/navigation'
+	import { goto } from '$app/navigation';
 
-  import { user } from './stores'
+	import { user } from './stores';
 
-  console.log('user', $user);
+	console.log('user', $user);
 
 	import { getContextClient, gql, queryStore, mutationStore } from '@urql/svelte';
 
 	import { customAlphabet } from 'nanoid';
 	const nanoid = customAlphabet('1234567890abcdef', 10);
 
-  
 	let selectedCoffee: any; //
 
 	const client = getContextClient();
@@ -103,12 +102,12 @@
 		stripe = await loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 	});
 
-  $: if ($makePaymentResult && !$makePaymentResult.fetching && $makePaymentResult.data) {
-    const payment = $makePaymentResult.data.makePayment;
-    console.log('payment', payment);
-    clientSecret = payment.clientSecret;
-    showPayElement = true;
-  }
+	$: if ($makePaymentResult && !$makePaymentResult.fetching && $makePaymentResult.data) {
+		const payment = $makePaymentResult.data.makePayment;
+		console.log('payment', payment);
+		clientSecret = payment.clientSecret;
+		showPayElement = true;
+	}
 
 	async function submit() {
 		// avoid processing duplicates
@@ -132,16 +131,16 @@
 		} else {
 			console.log('payment success');
 			processing = false;
-      showPayElement = false;
+			showPayElement = false;
 
 			// payment succeeded, redirect to "thank you" page
-			goto('/orders')
+			goto('/orders');
 		}
 	}
 </script>
 
-{#if $user.name !== '' }
-	<h2 class="text-2xl font-bold">Welcome {$user.name}</h2>
+{#if $user.name !== ''}
+	<h2 class="text-xl">Welcome {$user.name}</h2>
 {/if}
 
 {#if $coffeeStore.data}
@@ -160,6 +159,10 @@
 			>Place Order
 		</button>
 	</div>
+{/if}
+
+{#if $makePaymentResult && !$makePaymentResult.fetching && $makePaymentResult.data}
+<p class="mb-3">Order placed: {$makePaymentResult.data.makePayment.orderId} and payment initiated: {$makePaymentResult.data.makePayment.id}</p>
 {/if}
 
 {#if stripe && clientSecret && showPayElement}
@@ -186,5 +189,3 @@
 		<span class="block sm:inline">{$coffeeStore.error.message}</span>
 	</div>
 {/if}
-
-

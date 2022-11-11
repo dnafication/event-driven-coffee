@@ -42,6 +42,7 @@
 	"type": "module",
 	"dependencies": {
 		"@urql/svelte": "3.0.1",
-		"graphql": "16.6.0"
+		"graphql": "16.6.0",
+		"graphql-ws": "5.11.2"
 	}
 }
